@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
 import { FileText, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const user = await currentUser()
@@ -18,7 +19,9 @@ export default async function DashboardPage() {
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-semibold">ResumeAI</span>
+            <Link href="/" className="text-xl font-semibold">
+              ResumeAI
+            </Link>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">

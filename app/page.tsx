@@ -7,6 +7,7 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AuthDialog } from '@/components/auth/auth-dialog'
+import Link from 'next/link'
 
 export default function Home() {
   const { isSignedIn } = useUser()
@@ -26,22 +27,18 @@ export default function Home() {
     [isSignedIn, router]
   )
 
-  const {
-    getRootProps,
-    getInputProps,
-    isDragActive,
-    isDragReject,
-  } = useDropzone({
-    onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        ['.docx'],
-    },
-    maxSize: 5 * 1024 * 1024, // 5MB
-    multiple: false,
-    disabled: !isSignedIn,
-  })
+  const { getRootProps, getInputProps, isDragActive, isDragReject } =
+    useDropzone({
+      onDrop,
+      accept: {
+        'application/pdf': ['.pdf'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+          ['.docx'],
+      },
+      maxSize: 5 * 1024 * 1024, // 5MB
+      multiple: false,
+      disabled: !isSignedIn,
+    })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
@@ -53,7 +50,9 @@ export default function Home() {
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-semibold">ResumeAI</span>
+            <Link href="/" className="text-xl font-semibold">
+              ResumeAI
+            </Link>
           </div>
           {isSignedIn ? (
             <div className="flex items-center gap-4">
