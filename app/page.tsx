@@ -1,15 +1,30 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
+import { useUser, UserButton } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { Upload, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AuthDialog } from '@/components/auth/auth-dialog'
 
 export default function Home() {
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    // TODO: Handle file upload
-    console.log('Files dropped:', acceptedFiles)
-  }, [])
+  const { isSignedIn } = useUser()
+  const router = useRouter()
+  const [authDialogOpen, setAuthDialogOpen] = useState(false)
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (!isSignedIn) {
+        setAuthDialogOpen(true)
+        return
+      }
+      // TODO: Handle file upload for authenticated users
+      console.log('Files dropped:', acceptedFiles)
+      router.push('/dashboard')
+    },
+    [isSignedIn, router]
+  )
 
   const {
     getRootProps,
@@ -25,10 +40,14 @@ export default function Home() {
     },
     maxSize: 5 * 1024 * 1024, // 5MB
     multiple: false,
+    disabled: !isSignedIn,
   })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+      {/* Auth Dialog */}
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
+
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
@@ -36,7 +55,22 @@ export default function Home() {
             <FileText className="h-6 w-6 text-blue-600" />
             <span className="text-xl font-semibold">ResumeAI</span>
           </div>
-          <Button>Sign In</Button>
+          {isSignedIn ? (
+            <div className="flex items-center gap-4">
+              <Button onClick={() => router.push('/dashboard')}>
+                Dashboard
+              </Button>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'h-10 w-10',
+                  },
+                }}
+              />
+            </div>
+          ) : (
+            <Button onClick={() => setAuthDialogOpen(true)}>Sign In</Button>
+          )}
         </div>
       </header>
 
@@ -112,9 +146,11 @@ export default function Home() {
           </div>
 
           {/* Footer Text */}
-          <p className="mt-8 text-sm text-gray-500">
-            Sign in required to analyze resumes
-          </p>
+          {!isSignedIn && (
+            <p className="mt-8 text-sm text-gray-500">
+              Sign in required to analyze resumes
+            </p>
+          )}
         </div>
       </main>
     </div>
