@@ -1,9 +1,12 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
-import { FileText, Upload } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { getAnalysisByUserId } from '@/lib/actions/analysis.actions'
+import { AnalysisCard } from '@/components/dashboard/analysis-card'
+import { EmptyState } from '@/components/dashboard/empty-state'
 
 export default async function DashboardPage() {
   const user = await currentUser()
@@ -11,6 +14,9 @@ export default async function DashboardPage() {
   if (!user) {
     redirect('/login')
   }
+
+  // Fetch user's analysis history
+  const analyses = await getAnalysisByUserId(user.id)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
@@ -40,48 +46,45 @@ export default async function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-16">
-        <div className="mx-auto max-w-4xl">
+        <div className="">
           {/* Welcome Section */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {user.firstName || 'there'}!
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Welcome back!</h1>
             <p className="mt-2 text-gray-600">
-              Upload your resume to get instant AI-powered feedback and analysis
+              View your resume analysis history and track your improvements
             </p>
           </div>
 
-          {/* Resume Upload Area */}
-          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center hover:border-gray-400 hover:bg-gray-50">
-            <div className="mx-auto flex max-w-md flex-col items-center gap-4">
-              <div className="rounded-full bg-blue-100 p-4">
-                <Upload className="h-12 w-12 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold">Upload your resume</h2>
-                <p className="mt-2 text-sm text-gray-600">
-                  Drag and drop your resume here or click to browse
-                </p>
-                <p className="mt-1 text-xs text-gray-400">
-                  Supports PDF and DOCX (max 5MB)
-                </p>
-              </div>
-              <Button className="mt-4">
-                <Upload className="mr-2 h-4 w-4" />
-                Choose File
+          {/* Analyze New Resume Button */}
+          <div className="mb-12">
+            <Link href="/">
+              <Button size="lg" className="gap-2">
+                <FileText className="h-5 w-5" />
+                Analyze New Resume
               </Button>
-            </div>
+            </Link>
           </div>
 
-          {/* Recent Analyses (Placeholder) */}
-          <div className="mt-12">
-            <h2 className="text-xl font-semibold">Recent Analyses</h2>
-            <div className="mt-4 rounded-lg border bg-white p-8 text-center">
-              <p className="text-gray-500">
-                No resumes analyzed yet. Upload your first resume to get
-                started!
-              </p>
-            </div>
+          {/* Analysis History */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Analysis History
+            </h2>
+            {analyses.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {analyses.map((analysis) => (
+                  <AnalysisCard
+                    key={analysis._id as unknown as string}
+                    analysis={analysis}
+                    onClick={() => {
+                      // TODO: Navigate to analysis details page
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState />
+            )}
           </div>
         </div>
       </main>
