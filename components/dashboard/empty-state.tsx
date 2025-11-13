@@ -1,24 +1,25 @@
-import { FileText } from "lucide-react";
+import { FileText } from 'lucide-react'
 import {
   Empty,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
   EmptyDescription,
-} from "@/components/ui/empty";
+} from '@/components/ui/empty'
 
 export function EmptyState() {
   return (
-    <Empty>
+    <Empty className="'border-dashed border-2 border-gray-200">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <FileText />
         </EmptyMedia>
         <EmptyTitle>No analyses yet</EmptyTitle>
         <EmptyDescription>
-          Upload your first resume to get started with AI-powered analysis and feedback.
+          Upload your first resume to get started with AI-powered analysis and
+          feedback.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
-  );
+  )
 }
