@@ -61,16 +61,27 @@ export async function POST(req: Request) {
       const { id, email_addresses, first_name, last_name, image_url } =
         evt.data;
 
+      // Validate required fields
+      if (!id) {
+        console.error('Missing user ID in webhook payload');
+        return new Response('Error: Missing user ID', { status: 400 });
+      }
+
+      if (!email_addresses || email_addresses.length === 0) {
+        console.error('Missing email addresses in webhook payload');
+        return new Response('Error: Missing email address', { status: 400 });
+      }
+
       // Create user in MongoDB
       const user = await createUser({
         clerkId: id,
         email: email_addresses[0].email_address,
-        firstName: first_name || null,
-        lastName: last_name || null,
-        imageUrl: image_url || null,
+        firstName: first_name ?? null,
+        lastName: last_name ?? null,
+        imageUrl: image_url ?? null,
       });
 
-      console.log('User created:', user);
+      console.log('User created successfully:', user);
 
       return Response.json(
         { message: 'User created successfully', userId: user._id },
@@ -82,15 +93,21 @@ export async function POST(req: Request) {
       const { id, email_addresses, first_name, last_name, image_url } =
         evt.data;
 
+      // Validate required fields
+      if (!id) {
+        console.error('Missing user ID in webhook payload');
+        return new Response('Error: Missing user ID', { status: 400 });
+      }
+
       // Update user in MongoDB
       const user = await updateUser(id, {
-        email: email_addresses[0].email_address,
-        firstName: first_name || null,
-        lastName: last_name || null,
-        imageUrl: image_url || null,
+        email: email_addresses?.[0]?.email_address,
+        firstName: first_name ?? null,
+        lastName: last_name ?? null,
+        imageUrl: image_url ?? null,
       });
 
-      console.log('User updated:', user);
+      console.log('User updated successfully:', user);
 
       return Response.json(
         { message: 'User updated successfully', userId: user?._id },
@@ -119,8 +136,21 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error('Error processing webhook:', error);
-    return new Response('Error: Processing failed', {
-      status: 500,
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      eventType: evt?.type,
     });
+
+    return new Response(
+      JSON.stringify({
+        error: 'Processing failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
