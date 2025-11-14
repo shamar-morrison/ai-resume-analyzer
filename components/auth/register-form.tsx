@@ -57,7 +57,6 @@ export function RegisterForm() {
 
       setPendingVerification(true)
     } catch (err: any) {
-      console.error('Registration error:', err)
       setError(
         err.errors?.[0]?.message ||
           'Failed to create account. Please try again.'
@@ -86,7 +85,6 @@ export function RegisterForm() {
         setError('Verification incomplete. Please try again.')
       }
     } catch (err: any) {
-      console.error('Verification error:', err)
       setError(err.errors?.[0]?.message || 'Invalid verification code')
     } finally {
       setIsLoading(false)
@@ -106,7 +104,6 @@ export function RegisterForm() {
         redirectUrlComplete: '/dashboard',
       })
     } catch (err: any) {
-      console.error('Google sign-up error:', err)
       setError(err.errors?.[0]?.message || 'Failed to sign up with Google')
       setIsLoading(false)
     }

@@ -45,7 +45,6 @@ export function LoginForm() {
         setError('Something went wrong. Please try again.')
       }
     } catch (err: any) {
-      console.error('Login error:', err)
       setError(
         err.errors?.[0]?.message ||
           'Invalid email or password. Please try again.'
@@ -68,7 +67,6 @@ export function LoginForm() {
         redirectUrlComplete: '/dashboard',
       })
     } catch (err: any) {
-      console.error('Google sign-in error:', err)
       setError(err.errors?.[0]?.message || 'Failed to sign in with Google')
       setIsLoading(false)
     }

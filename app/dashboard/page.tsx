@@ -1,22 +1,52 @@
-import { currentUser } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import { UserButton } from '@clerk/nextjs'
+'use client'
+
+import { useUser, UserButton } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import { FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { getAnalysisByUserId } from '@/lib/actions/analysis.actions'
 import { AnalysisCard } from '@/components/dashboard/analysis-card'
 import { EmptyState } from '@/components/dashboard/empty-state'
+import { useEffect, useState } from 'react'
+import { SerializedAnalysis } from '@/lib/models/analysis.model'
 
-export default async function DashboardPage() {
-  const user = await currentUser()
+export default function DashboardPage() {
+  const { user, isLoaded } = useUser()
+  const router = useRouter()
+  const [analyses, setAnalyses] = useState<SerializedAnalysis[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  if (!user) {
-    redirect('/login')
+  // Handle delete analysis
+  const handleDelete = (analysisId: string) => {
+    setAnalyses((prev) => prev.filter((a) => a._id !== analysisId))
   }
 
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/login')
+    }
+  }, [isLoaded, user, router])
+
   // Fetch user's analysis history
-  const analyses = await getAnalysisByUserId(user.id)
+  useEffect(() => {
+    async function fetchAnalyses() {
+      if (!user) return
+
+      setIsLoading(true)
+      const data = await getAnalysisByUserId(user.id)
+      setAnalyses(data)
+      setIsLoading(false)
+    }
+
+    if (user) {
+      fetchAnalyses()
+    }
+  }, [user])
+
+  if (!isLoaded || !user) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
@@ -70,15 +100,20 @@ export default async function DashboardPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Analysis History
             </h2>
-            {analyses.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Loading your analyses...</p>
+              </div>
+            ) : analyses.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
                 {analyses.map((analysis) => (
                   <AnalysisCard
-                    key={analysis._id as unknown as string}
+                    key={analysis._id}
                     analysis={analysis}
                     onClick={() => {
-                      // TODO: Navigate to analysis details page
+                      router.push(`/analysis/${analysis._id}`)
                     }}
+                    onDelete={handleDelete}
                   />
                 ))}
               </div>

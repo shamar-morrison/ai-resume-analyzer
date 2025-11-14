@@ -2,16 +2,18 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { IAnalysis } from "@/lib/models/analysis.model";
+import { SerializedAnalysis } from "@/lib/models/analysis.model";
 import { TrendingUp } from "lucide-react";
 import { format } from "date-fns";
+import { DeleteAnalysisButton } from "./delete-analysis-button";
 
 interface AnalysisCardProps {
-  analysis: IAnalysis;
+  analysis: SerializedAnalysis;
   onClick?: () => void;
+  onDelete?: (id: string) => void;
 }
 
-export function AnalysisCard({ analysis, onClick }: AnalysisCardProps) {
+export function AnalysisCard({ analysis, onClick, onDelete }: AnalysisCardProps) {
   // Determine badge variant based on score
   const getBadgeVariant = (score: number) => {
     if (score >= 80) return "success";
@@ -37,9 +39,16 @@ export function AnalysisCard({ analysis, onClick }: AnalysisCardProps) {
 
   return (
     <Card
-      className="p-6 hover:shadow-md transition-shadow cursor-pointer"
+      className="group relative p-6 hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
+      {onDelete && analysis._id && (
+        <DeleteAnalysisButton
+          analysisId={analysis._id}
+          analysisName={analysis.resumeName}
+          onDelete={onDelete}
+        />
+      )}
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h3 className="font-semibold text-lg mb-2">{analysis.resumeName}</h3>

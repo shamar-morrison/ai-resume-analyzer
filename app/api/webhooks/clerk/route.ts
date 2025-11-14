@@ -8,19 +8,14 @@ import { createUser, updateUser, deleteUser } from '@/lib/actions/user.actions';
  * Syncs user data to MongoDB when users are created, updated, or deleted
  */
 export async function POST(req: Request) {
-  console.log('🔔 Webhook received at:', new Date().toISOString());
-
   // Get webhook secret from environment
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    console.error('❌ CLERK_WEBHOOK_SECRET not found in environment');
     throw new Error(
       'Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env.local'
     );
   }
-
-  console.log('✅ Webhook secret found');
 
   // Get the headers
   const headerPayload = await headers();
@@ -51,9 +46,7 @@ export async function POST(req: Request) {
       'svix-timestamp': svix_timestamp,
       'svix-signature': svix_signature,
     }) as WebhookEvent;
-    console.log('✅ Webhook signature verified');
   } catch (err) {
-    console.error('❌ Webhook verification failed:', err);
     return new Response('Error: Verification failed', {
       status: 400,
     });
@@ -61,33 +54,20 @@ export async function POST(req: Request) {
 
   // Handle the webhook event
   const eventType = evt.type;
-  console.log('📋 Event type:', eventType);
 
   try {
     if (eventType === 'user.created') {
-      console.log('👤 Processing user.created event');
       const { id, email_addresses, first_name, last_name, image_url } =
         evt.data;
 
-      console.log('📝 User data:', {
-        id,
-        email: email_addresses?.[0]?.email_address,
-        firstName: first_name,
-        lastName: last_name,
-      });
-
       // Validate required fields
       if (!id) {
-        console.error('❌ Missing user ID in webhook payload');
         return new Response('Error: Missing user ID', { status: 400 });
       }
 
       if (!email_addresses || email_addresses.length === 0) {
-        console.error('❌ Missing email addresses in webhook payload');
         return new Response('Error: Missing email address', { status: 400 });
       }
-
-      console.log('💾 Attempting to create user in MongoDB...');
 
       // Create user in MongoDB
       const user = await createUser({
@@ -96,12 +76,6 @@ export async function POST(req: Request) {
         firstName: first_name ?? null,
         lastName: last_name ?? null,
         imageUrl: image_url ?? null,
-      });
-
-      console.log('✅ User created successfully:', {
-        userId: user._id,
-        clerkId: user.clerkId,
-        email: user.email,
       });
 
       return Response.json(
@@ -116,7 +90,6 @@ export async function POST(req: Request) {
 
       // Validate required fields
       if (!id) {
-        console.error('Missing user ID in webhook payload');
         return new Response('Error: Missing user ID', { status: 400 });
       }
 
@@ -127,8 +100,6 @@ export async function POST(req: Request) {
         lastName: last_name ?? null,
         imageUrl: image_url ?? null,
       });
-
-      console.log('User updated successfully:', user);
 
       return Response.json(
         { message: 'User updated successfully', userId: user?._id },
@@ -142,8 +113,6 @@ export async function POST(req: Request) {
       // Delete user from MongoDB
       const deleted = await deleteUser(id!);
 
-      console.log('User deleted:', deleted);
-
       return Response.json(
         { message: 'User deleted successfully' },
         { status: 200 }
@@ -156,13 +125,6 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error processing webhook:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      eventType: evt?.type,
-    });
-
     return new Response(
       JSON.stringify({
         error: 'Processing failed',

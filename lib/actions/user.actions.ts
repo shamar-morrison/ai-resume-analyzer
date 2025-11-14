@@ -13,12 +13,9 @@ import {
  */
 export async function createUser(params: CreateUserParams): Promise<IUser> {
   try {
-    console.log('🔌 Connecting to MongoDB...');
     const db = await getDatabase();
-    console.log('✅ Connected to database:', db.databaseName);
 
     const usersCollection = db.collection<IUser>(USERS_COLLECTION);
-    console.log('📁 Using collection:', USERS_COLLECTION);
 
     const now = new Date();
     const newUser: Omit<IUser, '_id'> = {
@@ -27,21 +24,13 @@ export async function createUser(params: CreateUserParams): Promise<IUser> {
       updatedAt: now,
     };
 
-    console.log('💾 Inserting user document...');
     const result = await usersCollection.insertOne(newUser as IUser);
-    console.log('✅ User document inserted with ID:', result.insertedId);
 
     return {
       ...newUser,
       _id: result.insertedId,
     };
   } catch (error) {
-    console.error('❌ Error creating user:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      params,
-    });
     throw new Error(
       `Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
@@ -72,7 +61,6 @@ export async function updateUser(
 
     return result || null;
   } catch (error) {
-    console.error('Error updating user:', error);
     throw new Error('Failed to update user');
   }
 }
@@ -89,7 +77,6 @@ export async function deleteUser(clerkId: string): Promise<boolean> {
 
     return result.deletedCount > 0;
   } catch (error) {
-    console.error('Error deleting user:', error);
     throw new Error('Failed to delete user');
   }
 }
@@ -108,7 +95,6 @@ export async function getUserByClerkId(
 
     return user || null;
   } catch (error) {
-    console.error('Error fetching user:', error);
     throw new Error('Failed to fetch user');
   }
 }

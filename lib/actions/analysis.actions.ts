@@ -4,15 +4,28 @@ import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import {
   IAnalysis,
+  SerializedAnalysis,
   CreateAnalysisParams,
   getStatusFromScore,
   ANALYSES_COLLECTION,
 } from '@/lib/models/analysis.model';
 
 /**
- * Get all analyses for a specific user
+ * Helper to serialize MongoDB document to plain object for Client Components
  */
-export async function getAnalysisByUserId(userId: string): Promise<IAnalysis[]> {
+function serializeAnalysis(analysis: IAnalysis): SerializedAnalysis {
+  return {
+    ...analysis,
+    _id: analysis._id?.toString(),
+    createdAt: analysis.createdAt.toISOString(),
+    updatedAt: analysis.updatedAt.toISOString(),
+  };
+}
+
+/**
+ * Get all analyses for a specific user (serialized for Client Components)
+ */
+export async function getAnalysisByUserId(userId: string): Promise<SerializedAnalysis[]> {
   try {
     const db = await getDatabase();
     const analysesCollection = db.collection<IAnalysis>(ANALYSES_COLLECTION);
@@ -22,17 +35,16 @@ export async function getAnalysisByUserId(userId: string): Promise<IAnalysis[]> 
       .sort({ createdAt: -1 }) // Most recent first
       .toArray();
 
-    return analyses;
+    return analyses.map(serializeAnalysis);
   } catch (error) {
-    console.error('Error fetching analyses:', error);
     return [];
   }
 }
 
 /**
- * Get a single analysis by ID
+ * Get a single analysis by ID (serialized for Client Components)
  */
-export async function getAnalysisById(analysisId: string): Promise<IAnalysis | null> {
+export async function getAnalysisById(analysisId: string): Promise<SerializedAnalysis | null> {
   try {
     const db = await getDatabase();
     const analysesCollection = db.collection<IAnalysis>(ANALYSES_COLLECTION);
@@ -41,9 +53,8 @@ export async function getAnalysisById(analysisId: string): Promise<IAnalysis | n
       _id: new ObjectId(analysisId),
     });
 
-    return analysis || null;
+    return analysis ? serializeAnalysis(analysis) : null;
   } catch (error) {
-    console.error('Error fetching analysis:', error);
     return null;
   }
 }
@@ -73,26 +84,36 @@ export async function createAnalysis(params: CreateAnalysisParams): Promise<IAna
       _id: result.insertedId,
     };
   } catch (error) {
-    console.error('Error creating analysis:', error);
     return null;
   }
 }
 
 /**
- * Delete an analysis
+ * Delete an analysis (with ownership verification)
  */
-export async function deleteAnalysis(analysisId: string): Promise<boolean> {
+export async function deleteAnalysis(analysisId: string, userId: string): Promise<boolean> {
   try {
     const db = await getDatabase();
     const analysesCollection = db.collection<IAnalysis>(ANALYSES_COLLECTION);
 
+    // Verify the user owns this analysis before deleting
+    const analysis = await analysesCollection.findOne({
+      _id: new ObjectId(analysisId),
+      userId,
+    });
+
+    if (!analysis) {
+      return false;
+    }
+
+    // Delete the analysis
     const result = await analysesCollection.deleteOne({
       _id: new ObjectId(analysisId),
+      userId,
     });
 
     return result.deletedCount > 0;
   } catch (error) {
-    console.error('Error deleting analysis:', error);
     return false;
   }
 }
