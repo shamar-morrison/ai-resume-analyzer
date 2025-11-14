@@ -131,7 +131,7 @@ export default function Home() {
               ${isDragReject ? 'border-red-500 bg-red-50' : ''}
               ${
                 !isDragActive && !isDragReject
-                  ? 'border-gray-300 bg-transparent hover:border-gray-400 hover:bg-white/50'
+                  ? 'border-gray-300 bg-transparent hover:border-blue-500'
                   : ''
               }
             `}
@@ -142,7 +142,7 @@ export default function Home() {
               {/* Upload Icon */}
               <div
                 className={`
-                rounded-full p-4
+                rounded-full bg-transparent
                 ${isDragActive && !isDragReject ? 'bg-blue-100' : ''}
                 ${isDragReject ? 'bg-red-100' : ''}
                 ${!isDragActive && !isDragReject ? 'bg-gray-100' : ''}
