@@ -2,7 +2,11 @@ import { GoogleGenAI } from '@google/genai'
 import { GeminiAnalysisResponse } from '@/lib/models/analysis.model'
 
 // Initialize Gemini client
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error('GEMINI_API_KEY environment variable is required')
+}
+
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
 /**
  * Analyze resume text using Gemini Flash 2.x
