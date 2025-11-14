@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { SerializedAnalysis } from '@/lib/models/analysis.model';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { SerializedAnalysis } from '@/lib/models/analysis.model'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import {
   FileText,
   CheckCircle2,
@@ -14,14 +14,17 @@ import {
   Clock,
   TrendingUp,
   ChevronDown,
-  ChevronUp
-} from 'lucide-react';
-import Link from 'next/link';
-import { format } from 'date-fns';
-import { useState } from 'react';
+  ChevronUp,
+  FileIcon,
+  SignalZero,
+  FilePlus2Icon,
+} from 'lucide-react'
+import Link from 'next/link'
+import { format } from 'date-fns'
+import { useState } from 'react'
 
 interface AnalysisDetailsProps {
-  analysis: SerializedAnalysis;
+  analysis: SerializedAnalysis
 }
 
 const categoryLabels: Record<string, string> = {
@@ -31,36 +34,36 @@ const categoryLabels: Record<string, string> = {
   keywords: 'Keywords & ATS Optimization',
   achievements: 'Achievements & Impact',
   grammar: 'Grammar & Language',
-};
+}
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 8) return 'text-green-600';
-  if (score >= 6) return 'text-yellow-600';
-  return 'text-red-600';
+  if (score >= 8) return 'text-green-600'
+  if (score >= 6) return 'text-yellow-600'
+  return 'text-red-600'
 }
 
 function getScoreBgColor(score: number): string {
-  if (score >= 8) return 'bg-green-100 border-green-200';
-  if (score >= 6) return 'bg-yellow-100 border-yellow-200';
-  return 'bg-red-100 border-red-200';
+  if (score >= 8) return 'bg-green-100 border-green-200'
+  if (score >= 6) return 'bg-yellow-100 border-yellow-200'
+  return 'bg-red-100 border-red-200'
 }
 
 function CategoryCard({
   title,
   score,
-  tips
+  tips,
 }: {
-  title: string;
-  score: number;
+  title: string
+  score: number
   tips: string[]
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <Card className="p-6 hover:shadow-md transition-shadow">
@@ -83,7 +86,11 @@ function CategoryCard({
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
-          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {isExpanded ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
           {isExpanded ? 'Hide' : 'View'} improvement tips ({tips.length})
         </button>
 
@@ -91,7 +98,10 @@ function CategoryCard({
         {isExpanded && (
           <ul className="space-y-2 pl-1">
             {tips.map((tip, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+              <li
+                key={index}
+                className="flex items-start gap-2 text-sm text-gray-700"
+              >
                 <TrendingUp className="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" />
                 <span>{tip}</span>
               </li>
@@ -100,12 +110,12 @@ function CategoryCard({
         )}
       </div>
     </Card>
-  );
+  )
 }
 
 export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
-  const scoreColor = getScoreColor(analysis.overallScore);
-  const scoreBgColor = getScoreBgColor(analysis.overallScore);
+  const scoreColor = getScoreColor(analysis.overallScore)
+  const scoreBgColor = getScoreBgColor(analysis.overallScore)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
@@ -135,7 +145,9 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-3">
                 <FileText className="h-8 w-8 text-gray-600" />
-                <h1 className="text-3xl font-bold text-gray-900">{analysis.resumeName}</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {analysis.resumeName}
+                </h1>
               </div>
 
               {/* Overall Score */}
@@ -147,12 +159,17 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
                   {analysis.overallScore.toFixed(1)}
                   <span className="text-3xl text-gray-400">/10</span>
                 </div>
-                <Badge variant={
-                  analysis.status === 'Excellent' ? 'success' :
-                  analysis.status === 'Good' ? 'default' :
-                  analysis.status === 'Needs Improvement' ? 'warning' :
-                  'danger'
-                }>
+                <Badge
+                  variant={
+                    analysis.status === 'Excellent'
+                      ? 'success'
+                      : analysis.status === 'Good'
+                        ? 'default'
+                        : analysis.status === 'Needs Improvement'
+                          ? 'warning'
+                          : 'danger'
+                  }
+                >
                   {analysis.status}
                 </Badge>
               </div>
@@ -164,12 +181,14 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
                   <span>{analysis.fileName}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+                  <FilePlus2Icon className="h-4 w-4" />
                   <span>{formatFileSize(analysis.fileSize)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>{format(new Date(analysis.createdAt), 'MMM d, yyyy')}</span>
+                  <span>
+                    {format(new Date(analysis.createdAt), 'MMM d, yyyy')}
+                  </span>
                 </div>
               </div>
             </div>
@@ -183,11 +202,16 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-6 w-6 text-green-600" />
-                <h2 className="text-xl font-bold text-gray-900">Key Strengths</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Key Strengths
+                </h2>
               </div>
               <ul className="space-y-2">
                 {analysis.strengths.map((strength, index) => (
-                  <li key={index} className="flex items-start gap-2 text-gray-700">
+                  <li
+                    key={index}
+                    className="flex items-start gap-2 text-gray-700"
+                  >
                     <CheckCircle2 className="h-5 w-5 mt-0.5 text-green-600 flex-shrink-0" />
                     <span>{strength}</span>
                   </li>
@@ -201,11 +225,16 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-6 w-6 text-orange-600" />
-                <h2 className="text-xl font-bold text-gray-900">Priority Improvements</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Priority Improvements
+                </h2>
               </div>
               <ul className="space-y-2">
                 {analysis.improvements.map((improvement, index) => (
-                  <li key={index} className="flex items-start gap-2 text-gray-700">
+                  <li
+                    key={index}
+                    className="flex items-start gap-2 text-gray-700"
+                  >
                     <AlertCircle className="h-5 w-5 mt-0.5 text-orange-600 flex-shrink-0" />
                     <span>{improvement}</span>
                   </li>
@@ -217,7 +246,9 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
 
         {/* Category Scores */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed Category Analysis</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Detailed Category Analysis
+          </h2>
           <div className="grid md:grid-cols-2 gap-6">
             {Object.entries(analysis.categoryScores).map(([key, data]) => (
               <CategoryCard
@@ -241,5 +272,5 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
         </div>
       </main>
     </div>
-  );
+  )
 }
