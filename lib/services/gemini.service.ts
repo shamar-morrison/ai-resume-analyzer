@@ -67,6 +67,7 @@ ${text}`
 
     return analysisData
   } catch (error) {
+    console.error('Failed to analyze resume:', error)
     throw new Error('Failed to analyze resume. Please try again.')
   }
 }
