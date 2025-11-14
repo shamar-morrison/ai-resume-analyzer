@@ -11,15 +11,11 @@ async function extractFromPDF(buffer: Buffer): Promise<string> {
       throw new Error('Empty or invalid PDF buffer');
     }
 
-    console.log('PDF buffer size:', buffer.length, 'bytes');
-
     // Validate PDF header
     const header = buffer.toString('utf-8', 0, 5);
     if (!header.startsWith('%PDF-')) {
       throw new Error('Invalid PDF file: Missing PDF header. The file may be corrupted or not a valid PDF.');
     }
-
-    console.log('PDF header validated');
 
     // Import PDF.js worker for Node.js environment (legacy build)
     // @ts-ignore - Dynamic import needed for worker setup
@@ -28,7 +24,6 @@ async function extractFromPDF(buffer: Buffer): Promise<string> {
     // Convert Buffer to Uint8Array for pdfjs-dist
     const uint8Array = new Uint8Array(buffer);
 
-    console.log('Loading PDF document...');
     const loadingTask = pdfjs.getDocument({
       data: uint8Array,
       useSystemFonts: true,
@@ -37,8 +32,6 @@ async function extractFromPDF(buffer: Buffer): Promise<string> {
 
     const pdfDocument = await loadingTask.promise;
     const numPages = pdfDocument.numPages;
-
-    console.log(`PDF loaded successfully, extracting text from ${numPages} pages...`);
 
     let fullText = '';
 
@@ -60,21 +53,12 @@ async function extractFromPDF(buffer: Buffer): Promise<string> {
 
     const extractedText = fullText.trim();
 
-    console.log('Text extraction result:', {
-      hasText: !!extractedText,
-      textLength: extractedText.length,
-      pageCount: numPages
-    });
-
     if (!extractedText) {
       throw new Error('No text content found in PDF. The PDF may be scanned images without a text layer.');
     }
 
-    console.log('Successfully extracted text from PDF, length:', extractedText.length);
     return extractedText;
   } catch (error) {
-    console.error('Error extracting text from PDF:', error);
-
     // Provide more specific error messages
     if (error instanceof Error) {
       // Re-throw our custom errors
@@ -99,7 +83,6 @@ async function extractFromDOCX(buffer: Buffer): Promise<string> {
     const result = await mammoth.extractRawText({ buffer });
     return result.value;
   } catch (error) {
-    console.error('Error extracting text from DOCX:', error);
     throw new Error('Failed to extract text from DOCX file');
   }
 }

@@ -52,7 +52,6 @@ ${text}`
 
     // Validate response before accessing text
     if (!result || !result.text) {
-      console.error('Invalid Gemini response:', result)
       throw new Error('No response received from AI model')
     }
 
@@ -66,7 +65,6 @@ ${text}`
 
     return analysisData
   } catch (error) {
-    console.error('Error analyzing resume with Gemini:', error)
     throw new Error('Failed to analyze resume. Please try again.')
   }
 }
@@ -101,15 +99,11 @@ async function generateWithRetry(
       // Check if it's a rate limit error
       if (error?.status === 429 || error?.message?.includes('rate limit')) {
         const delay = initialDelay * Math.pow(2, attempt)
-        console.warn(
-          `Rate limit hit. Retrying in ${delay}ms... (Attempt ${attempt + 1}/${maxRetries})`
-        )
         await new Promise((resolve) => setTimeout(resolve, delay))
         continue
       }
 
       // For non-rate-limit errors, throw immediately with better context
-      console.error('Non-retryable error. Full error object:', error)
       throw error
     }
   }
@@ -128,10 +122,6 @@ function parseGeminiResponse(responseText: string): GeminiAnalysisResponse {
       responseText.startsWith('<html') ||
       responseText.startsWith('<?xml')
     ) {
-      console.error(
-        'Received HTML/XML instead of JSON:',
-        responseText.substring(0, 200)
-      )
       throw new Error(
         'API returned an error page instead of JSON. Please check your API key and model availability.'
       )
@@ -147,22 +137,12 @@ function parseGeminiResponse(responseText: string): GeminiAnalysisResponse {
 
     // Validate it looks like JSON before parsing
     if (!jsonText.startsWith('{') && !jsonText.startsWith('[')) {
-      console.error(
-        'Response does not appear to be JSON:',
-        jsonText.substring(0, 200)
-      )
       throw new Error('Invalid response format: Expected JSON object or array.')
     }
 
     const parsed = JSON.parse(jsonText)
     return parsed as GeminiAnalysisResponse
   } catch (error) {
-    console.error('Error parsing Gemini response:', error)
-    console.error(
-      'Response text (first 500 chars):',
-      responseText.substring(0, 500)
-    )
-
     if (error instanceof SyntaxError) {
       throw new Error(
         'Failed to parse AI response. The model returned invalid JSON format.'
