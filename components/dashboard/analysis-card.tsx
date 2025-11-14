@@ -2,12 +2,12 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { IAnalysis } from "@/lib/models/analysis.model";
+import { SerializedAnalysis } from "@/lib/models/analysis.model";
 import { TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 
 interface AnalysisCardProps {
-  analysis: IAnalysis;
+  analysis: SerializedAnalysis;
   onClick?: () => void;
 }
 

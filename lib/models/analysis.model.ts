@@ -50,6 +50,16 @@ export interface IAnalysis {
 }
 
 /**
+ * Serialized analysis for passing to Client Components
+ * Converts ObjectId and Dates to strings for Next.js serialization
+ */
+export interface SerializedAnalysis extends Omit<IAnalysis, '_id' | 'createdAt' | 'updatedAt'> {
+  _id?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * Analysis creation parameters
  */
 export interface CreateAnalysisParams {

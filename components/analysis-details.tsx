@@ -1,6 +1,6 @@
 "use client";
 
-import { IAnalysis } from '@/lib/models/analysis.model';
+import { SerializedAnalysis } from '@/lib/models/analysis.model';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { useState } from 'react';
 
 interface AnalysisDetailsProps {
-  analysis: IAnalysis;
+  analysis: SerializedAnalysis;
 }
 
 const categoryLabels: Record<string, string> = {

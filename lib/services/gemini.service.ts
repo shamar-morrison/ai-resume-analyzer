@@ -94,19 +94,9 @@ async function generateWithRetry(
         },
       })
 
-      console.log('Gemini response received successfully')
       return response
     } catch (error: any) {
       lastError = error
-
-      console.error(
-        `Gemini API error (attempt ${attempt + 1}/${maxRetries}):`,
-        {
-          message: error?.message,
-          status: error?.status,
-          name: error?.name,
-        }
-      )
 
       // Check if it's a rate limit error
       if (error?.status === 429 || error?.message?.includes('rate limit')) {
