@@ -37,7 +37,6 @@ export async function getAnalysisByUserId(userId: string): Promise<SerializedAna
 
     return analyses.map(serializeAnalysis);
   } catch (error) {
-    console.error('Error fetching analyses:', error);
     return [];
   }
 }
@@ -56,7 +55,6 @@ export async function getAnalysisById(analysisId: string): Promise<SerializedAna
 
     return analysis ? serializeAnalysis(analysis) : null;
   } catch (error) {
-    console.error('Error fetching analysis:', error);
     return null;
   }
 }
@@ -86,7 +84,6 @@ export async function createAnalysis(params: CreateAnalysisParams): Promise<IAna
       _id: result.insertedId,
     };
   } catch (error) {
-    console.error('Error creating analysis:', error);
     return null;
   }
 }
@@ -106,7 +103,6 @@ export async function deleteAnalysis(analysisId: string, userId: string): Promis
     });
 
     if (!analysis) {
-      console.error('Analysis not found or user does not own this analysis');
       return false;
     }
 
@@ -118,7 +114,6 @@ export async function deleteAnalysis(analysisId: string, userId: string): Promis
 
     return result.deletedCount > 0;
   } catch (error) {
-    console.error('Error deleting analysis:', error);
     return false;
   }
 }

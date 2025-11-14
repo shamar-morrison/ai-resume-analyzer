@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
       extractedText = await extractText(file);
       validateExtractedText(extractedText);
     } catch (error: any) {
-      console.error('Text extraction error:', error);
       return NextResponse.json(
         { error: error.message || 'Failed to extract text from file' },
         { status: 400 }
@@ -61,7 +60,6 @@ export async function POST(request: NextRequest) {
     try {
       analysisResult = await analyzeResume(extractedText);
     } catch (error: any) {
-      console.error('Gemini analysis error:', error);
       return NextResponse.json(
         { error: error.message || 'Failed to analyze resume. Please try again.' },
         { status: 500 }
@@ -103,7 +101,6 @@ export async function POST(request: NextRequest) {
       overallScore: analysisResult.overallScore,
     });
   } catch (error: any) {
-    console.error('Unexpected error in analyze route:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }

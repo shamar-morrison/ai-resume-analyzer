@@ -80,7 +80,6 @@ export default function Home() {
         throw new Error('No analysis ID returned')
       }
     } catch (err: any) {
-      console.error('Upload error:', err)
       setError(err.message || 'Failed to analyze resume. Please try again.')
       setIsAnalyzing(false)
       setUploadingFile(null)

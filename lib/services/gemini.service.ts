@@ -5,7 +5,7 @@ import { GeminiAnalysisResponse } from '@/lib/models/analysis.model'
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
 
 /**
- * Analyze resume text using Gemini Flash 2.5
+ * Analyze resume text using Gemini Flash 2.x
  */
 export async function analyzeResume(
   text: string
@@ -50,14 +50,12 @@ ${text}`
     // Generate content with retry logic
     const result = await generateWithRetry(prompt)
 
-    // Validate response before accessing text
     if (!result || !result.text) {
       throw new Error('No response received from AI model')
     }
 
     const responseText = result.text
 
-    // Parse JSON response
     const analysisData = parseGeminiResponse(responseText)
 
     // Validate response structure

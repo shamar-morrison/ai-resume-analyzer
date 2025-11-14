@@ -41,11 +41,9 @@ export function DeleteAnalysisButton({
         setIsOpen(false);
       } else {
         // Handle error - could add toast notification here
-        console.error("Failed to delete analysis");
         alert("Failed to delete analysis. Please try again.");
       }
     } catch (error) {
-      console.error("Error deleting analysis:", error);
       alert("An error occurred while deleting. Please try again.");
     } finally {
       setIsDeleting(false);
