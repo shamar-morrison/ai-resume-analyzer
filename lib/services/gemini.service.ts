@@ -1,13 +1,15 @@
-import { GoogleGenAI } from '@google/genai';
-import { GeminiAnalysisResponse } from '@/lib/models/analysis.model';
+import { GoogleGenAI } from '@google/genai'
+import { GeminiAnalysisResponse } from '@/lib/models/analysis.model'
 
 // Initialize Gemini client
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
 
 /**
  * Analyze resume text using Gemini Flash 2.5
  */
-export async function analyzeResume(text: string): Promise<GeminiAnalysisResponse> {
+export async function analyzeResume(
+  text: string
+): Promise<GeminiAnalysisResponse> {
   try {
     const prompt = `Analyze the following resume and provide a detailed evaluation with scores (1-10) for each category:
 
@@ -43,22 +45,29 @@ Format your response as JSON with this exact structure:
 }
 
 Resume text:
-${text}`;
+${text}`
 
     // Generate content with retry logic
-    const result = await generateWithRetry(prompt);
-    const responseText = result.text;
+    const result = await generateWithRetry(prompt)
+
+    // Validate response before accessing text
+    if (!result || !result.text) {
+      console.error('Invalid Gemini response:', result)
+      throw new Error('No response received from AI model')
+    }
+
+    const responseText = result.text
 
     // Parse JSON response
-    const analysisData = parseGeminiResponse(responseText);
+    const analysisData = parseGeminiResponse(responseText)
 
     // Validate response structure
-    validateGeminiResponse(analysisData);
+    validateGeminiResponse(analysisData)
 
-    return analysisData;
+    return analysisData
   } catch (error) {
-    console.error('Error analyzing resume with Gemini:', error);
-    throw new Error('Failed to analyze resume. Please try again.');
+    console.error('Error analyzing resume with Gemini:', error)
+    throw new Error('Failed to analyze resume. Please try again.')
   }
 }
 
@@ -70,32 +79,52 @@ async function generateWithRetry(
   maxRetries = 3,
   initialDelay = 1000
 ): Promise<any> {
-  let lastError: Error | null = null;
+  let lastError: Error | null = null
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const response = await genAI.models.generateContent({
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.0-flash',
         contents: prompt,
-      });
-      return response;
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+          topP: 0.9,
+          topK: 40,
+        },
+      })
+
+      console.log('Gemini response received successfully')
+      return response
     } catch (error: any) {
-      lastError = error;
+      lastError = error
+
+      console.error(
+        `Gemini API error (attempt ${attempt + 1}/${maxRetries}):`,
+        {
+          message: error?.message,
+          status: error?.status,
+          name: error?.name,
+        }
+      )
 
       // Check if it's a rate limit error
       if (error?.status === 429 || error?.message?.includes('rate limit')) {
-        const delay = initialDelay * Math.pow(2, attempt);
-        console.warn(`Rate limit hit. Retrying in ${delay}ms... (Attempt ${attempt + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
+        const delay = initialDelay * Math.pow(2, attempt)
+        console.warn(
+          `Rate limit hit. Retrying in ${delay}ms... (Attempt ${attempt + 1}/${maxRetries})`
+        )
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        continue
       }
 
-      // For non-rate-limit errors, throw immediately
-      throw error;
+      // For non-rate-limit errors, throw immediately with better context
+      console.error('Non-retryable error. Full error object:', error)
+      throw error
     }
   }
 
-  throw lastError || new Error('Failed after maximum retries');
+  throw lastError || new Error('Failed after maximum retries')
 }
 
 /**
@@ -103,20 +132,54 @@ async function generateWithRetry(
  */
 function parseGeminiResponse(responseText: string): GeminiAnalysisResponse {
   try {
-    // Remove markdown code blocks if present
-    let jsonText = responseText.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/```\n?/g, '');
+    // Check if response is HTML error page
+    if (
+      responseText.startsWith('<!DOCTYPE') ||
+      responseText.startsWith('<html') ||
+      responseText.startsWith('<?xml')
+    ) {
+      console.error(
+        'Received HTML/XML instead of JSON:',
+        responseText.substring(0, 200)
+      )
+      throw new Error(
+        'API returned an error page instead of JSON. Please check your API key and model availability.'
+      )
     }
 
-    const parsed = JSON.parse(jsonText);
-    return parsed as GeminiAnalysisResponse;
+    // Remove markdown code blocks if present
+    let jsonText = responseText.trim()
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '')
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/```\n?/g, '')
+    }
+
+    // Validate it looks like JSON before parsing
+    if (!jsonText.startsWith('{') && !jsonText.startsWith('[')) {
+      console.error(
+        'Response does not appear to be JSON:',
+        jsonText.substring(0, 200)
+      )
+      throw new Error('Invalid response format: Expected JSON object or array.')
+    }
+
+    const parsed = JSON.parse(jsonText)
+    return parsed as GeminiAnalysisResponse
   } catch (error) {
-    console.error('Error parsing Gemini response:', error);
-    console.error('Response text:', responseText);
-    throw new Error('Failed to parse AI response. Invalid JSON format.');
+    console.error('Error parsing Gemini response:', error)
+    console.error(
+      'Response text (first 500 chars):',
+      responseText.substring(0, 500)
+    )
+
+    if (error instanceof SyntaxError) {
+      throw new Error(
+        'Failed to parse AI response. The model returned invalid JSON format.'
+      )
+    }
+
+    throw error
   }
 }
 
@@ -125,37 +188,58 @@ function parseGeminiResponse(responseText: string): GeminiAnalysisResponse {
  */
 function validateGeminiResponse(data: any): void {
   if (!data || typeof data !== 'object') {
-    throw new Error('Invalid response structure: not an object');
+    throw new Error('Invalid response structure: not an object')
   }
 
   if (!data.categoryScores || typeof data.categoryScores !== 'object') {
-    throw new Error('Invalid response structure: missing categoryScores');
+    throw new Error('Invalid response structure: missing categoryScores')
   }
 
-  const requiredCategories = ['organization', 'content', 'formatting', 'keywords', 'achievements', 'grammar'];
+  const requiredCategories = [
+    'organization',
+    'content',
+    'formatting',
+    'keywords',
+    'achievements',
+    'grammar',
+  ]
   for (const category of requiredCategories) {
-    const categoryData = data.categoryScores[category];
+    const categoryData = data.categoryScores[category]
     if (!categoryData || typeof categoryData !== 'object') {
-      throw new Error(`Invalid response structure: missing category ${category}`);
+      throw new Error(
+        `Invalid response structure: missing category ${category}`
+      )
     }
-    if (typeof categoryData.score !== 'number' || categoryData.score < 1 || categoryData.score > 10) {
-      throw new Error(`Invalid score for category ${category}: must be between 1 and 10`);
+    if (
+      typeof categoryData.score !== 'number' ||
+      categoryData.score < 1 ||
+      categoryData.score > 10
+    ) {
+      throw new Error(
+        `Invalid score for category ${category}: must be between 1 and 10`
+      )
     }
     if (!Array.isArray(categoryData.tips) || categoryData.tips.length === 0) {
-      throw new Error(`Invalid tips for category ${category}: must be a non-empty array`);
+      throw new Error(
+        `Invalid tips for category ${category}: must be a non-empty array`
+      )
     }
   }
 
-  if (typeof data.overallScore !== 'number' || data.overallScore < 1 || data.overallScore > 10) {
-    throw new Error('Invalid overall score: must be between 1 and 10');
+  if (
+    typeof data.overallScore !== 'number' ||
+    data.overallScore < 1 ||
+    data.overallScore > 10
+  ) {
+    throw new Error('Invalid overall score: must be between 1 and 10')
   }
 
   if (!Array.isArray(data.strengths) || data.strengths.length === 0) {
-    throw new Error('Invalid strengths: must be a non-empty array');
+    throw new Error('Invalid strengths: must be a non-empty array')
   }
 
   if (!Array.isArray(data.improvements) || data.improvements.length === 0) {
-    throw new Error('Invalid improvements: must be a non-empty array');
+    throw new Error('Invalid improvements: must be a non-empty array')
   }
 }
 
@@ -163,5 +247,5 @@ function validateGeminiResponse(data: any): void {
  * Calculate 0-100 score from 1-10 scale
  */
 export function convertScoreTo100(score: number): number {
-  return Math.round((score / 10) * 100);
+  return Math.round((score / 10) * 100)
 }

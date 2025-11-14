@@ -1,4 +1,4 @@
-import { PDFParse } from 'pdf-parse';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import mammoth from 'mammoth';
 
 /**
@@ -6,12 +6,88 @@ import mammoth from 'mammoth';
  */
 async function extractFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const pdfParse = new PDFParse({ data: buffer });
-    const result = await pdfParse.getText();
-    return result.text;
+    // Validate buffer
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Empty or invalid PDF buffer');
+    }
+
+    console.log('PDF buffer size:', buffer.length, 'bytes');
+
+    // Validate PDF header
+    const header = buffer.toString('utf-8', 0, 5);
+    if (!header.startsWith('%PDF-')) {
+      throw new Error('Invalid PDF file: Missing PDF header. The file may be corrupted or not a valid PDF.');
+    }
+
+    console.log('PDF header validated');
+
+    // Import PDF.js worker for Node.js environment (legacy build)
+    // @ts-ignore - Dynamic import needed for worker setup
+    await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
+
+    // Convert Buffer to Uint8Array for pdfjs-dist
+    const uint8Array = new Uint8Array(buffer);
+
+    console.log('Loading PDF document...');
+    const loadingTask = pdfjs.getDocument({
+      data: uint8Array,
+      useSystemFonts: true,
+      verbosity: 0, // Suppress warnings
+    });
+
+    const pdfDocument = await loadingTask.promise;
+    const numPages = pdfDocument.numPages;
+
+    console.log(`PDF loaded successfully, extracting text from ${numPages} pages...`);
+
+    let fullText = '';
+
+    // Extract text from all pages
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdfDocument.getPage(pageNum);
+      const textContent = await page.getTextContent();
+
+      // Combine all text items from the page
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+
+      fullText += pageText + '\n';
+    }
+
+    // Clean up
+    await pdfDocument.destroy();
+
+    const extractedText = fullText.trim();
+
+    console.log('Text extraction result:', {
+      hasText: !!extractedText,
+      textLength: extractedText.length,
+      pageCount: numPages
+    });
+
+    if (!extractedText) {
+      throw new Error('No text content found in PDF. The PDF may be scanned images without a text layer.');
+    }
+
+    console.log('Successfully extracted text from PDF, length:', extractedText.length);
+    return extractedText;
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
-    throw new Error('Failed to extract text from PDF file');
+
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      // Re-throw our custom errors
+      if (error.message.includes('Invalid PDF file') ||
+          error.message.includes('No text content found') ||
+          error.message.includes('Empty or invalid')) {
+        throw error;
+      }
+      // Wrap other errors with context
+      throw new Error(`Failed to extract text from PDF file: ${error.message}`);
+    }
+
+    throw new Error('Failed to extract text from PDF file: Unknown error');
   }
 }
 
