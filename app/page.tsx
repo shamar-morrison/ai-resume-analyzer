@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
@@ -16,10 +16,20 @@ export default function Home() {
   const { isSignedIn } = useUser()
   const router = useRouter()
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
+  const [authDialogTab, setAuthDialogTab] = useState<'login' | 'register'>(
+    'login'
+  )
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (!isSignedIn) {
+        // Store the file for later upload after authentication
+        if (acceptedFiles.length > 0) {
+          setPendingFile(acceptedFiles[0])
+        }
+        // Open auth dialog with Sign Up tab
+        setAuthDialogTab('register')
         setAuthDialogOpen(true)
         return
       }
@@ -29,6 +39,16 @@ export default function Home() {
     },
     [isSignedIn, router]
   )
+
+  // Auto-upload pending file after successful authentication
+  useEffect(() => {
+    if (isSignedIn && pendingFile) {
+      // TODO: Handle file upload for authenticated users
+      console.log('Auto-uploading pending file:', pendingFile)
+      setPendingFile(null)
+      router.push('/dashboard')
+    }
+  }, [isSignedIn, pendingFile, router])
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } =
     useDropzone({
@@ -40,13 +60,16 @@ export default function Home() {
       },
       maxSize: 5 * 1024 * 1024, // 5MB
       multiple: false,
-      disabled: !isSignedIn,
     })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
       {/* Auth Dialog */}
-      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
+      <AuthDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
+        defaultTab={authDialogTab}
+      />
 
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm">
@@ -71,7 +94,14 @@ export default function Home() {
               />
             </div>
           ) : (
-            <Button onClick={() => setAuthDialogOpen(true)}>Sign In</Button>
+            <Button
+              onClick={() => {
+                setAuthDialogTab('login')
+                setAuthDialogOpen(true)
+              }}
+            >
+              Sign In
+            </Button>
           )}
         </div>
       </header>
@@ -135,10 +165,12 @@ export default function Home() {
                     ? 'File type not supported'
                     : isDragActive
                       ? 'Drop your resume here'
-                      : 'Drag and drop your resume here'}
+                      : !isSignedIn
+                        ? 'Sign in to upload your resume'
+                        : 'Drag and drop your resume here'}
                 </p>
                 <p className="text-sm text-gray-500">
-                  or click to browse files
+                  {!isSignedIn ? '' : 'or click to browse files'}
                 </p>
                 <p className="text-xs text-gray-400">
                   Supports PDF and DOCX (max 5MB)
@@ -146,13 +178,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Footer Text */}
-          {!isSignedIn && (
-            <p className="mt-8 text-sm text-gray-500">
-              Sign in required to analyze resumes
-            </p>
-          )}
         </div>
       </main>
 

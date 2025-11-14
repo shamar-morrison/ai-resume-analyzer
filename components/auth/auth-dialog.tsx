@@ -70,25 +70,6 @@ export function AuthDialog({
             </p>
           </TabsContent>
         </Tabs>
-
-        <p className="mt-2 text-center text-xs text-gray-500">
-          Or visit{' '}
-          <Link
-            href="/login"
-            className="text-blue-600 hover:underline"
-            onClick={() => onOpenChange(false)}
-          >
-            /login
-          </Link>{' '}
-          or{' '}
-          <Link
-            href="/register"
-            className="text-blue-600 hover:underline"
-            onClick={() => onOpenChange(false)}
-          >
-            /register
-          </Link>
-        </p>
       </DialogContent>
     </Dialog>
   )
