@@ -4,6 +4,10 @@ import { extractText, validateExtractedText } from '@/lib/services/text-extracti
 import { analyzeResume, convertScoreTo100 } from '@/lib/services/gemini.service';
 import { createAnalysis } from '@/lib/actions/analysis.actions';
 
+// Configure runtime for Vercel serverless functions
+export const maxDuration = 30; // Maximum execution time in seconds (Hobby: 10s, Pro: 60s)
+export const dynamic = 'force-dynamic'; // Ensure route is not statically generated
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 

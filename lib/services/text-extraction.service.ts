@@ -1,8 +1,8 @@
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { extractText as unpdfExtractText, getDocumentProxy } from 'unpdf';
 import mammoth from 'mammoth';
 
 /**
- * Extract text from a PDF file
+ * Extract text from a PDF file using unpdf (serverless-optimized)
  */
 async function extractFromPDF(buffer: Buffer): Promise<string> {
   try {
@@ -17,43 +17,18 @@ async function extractFromPDF(buffer: Buffer): Promise<string> {
       throw new Error('Invalid PDF file: Missing PDF header. The file may be corrupted or not a valid PDF.');
     }
 
-    // Import PDF.js worker for Node.js environment (legacy build)
-    // @ts-ignore - Dynamic import needed for worker setup
-    await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
-
-    // Convert Buffer to Uint8Array for pdfjs-dist
+    // Convert Buffer to Uint8Array for unpdf
     const uint8Array = new Uint8Array(buffer);
 
-    const loadingTask = pdfjs.getDocument({
-      data: uint8Array,
-      useSystemFonts: true,
-      verbosity: 0, // Suppress warnings
-    });
+    // Get PDF document proxy
+    const pdf = await getDocumentProxy(uint8Array);
 
-    const pdfDocument = await loadingTask.promise;
-    const numPages = pdfDocument.numPages;
+    // Extract text with pages merged
+    const { text } = await unpdfExtractText(pdf, { mergePages: true });
 
-    let fullText = '';
+    const extractedText = text.trim();
 
-    // Extract text from all pages
-    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-      const page = await pdfDocument.getPage(pageNum);
-      const textContent = await page.getTextContent();
-
-      // Combine all text items from the page
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ');
-
-      fullText += pageText + '\n';
-    }
-
-    // Clean up
-    await pdfDocument.destroy();
-
-    const extractedText = fullText.trim();
-
-    if (!extractedText) {
+    if (!extractedText || extractedText.length === 0) {
       throw new Error('No text content found in PDF. The PDF may be scanned images without a text layer.');
     }
 
