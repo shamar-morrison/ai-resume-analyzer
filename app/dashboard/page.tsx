@@ -9,13 +9,18 @@ import { getAnalysisByUserId } from '@/lib/actions/analysis.actions'
 import { AnalysisCard } from '@/components/dashboard/analysis-card'
 import { EmptyState } from '@/components/dashboard/empty-state'
 import { useEffect, useState } from 'react'
-import { IAnalysis } from '@/lib/models/analysis.model'
+import { SerializedAnalysis } from '@/lib/models/analysis.model'
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
-  const [analyses, setAnalyses] = useState<IAnalysis[]>([])
+  const [analyses, setAnalyses] = useState<SerializedAnalysis[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  // Handle delete analysis
+  const handleDelete = (analysisId: string) => {
+    setAnalyses((prev) => prev.filter((a) => a._id !== analysisId))
+  }
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -103,11 +108,12 @@ export default function DashboardPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {analyses.map((analysis) => (
                   <AnalysisCard
-                    key={analysis._id?.toString()}
+                    key={analysis._id}
                     analysis={analysis}
                     onClick={() => {
-                      router.push(`/analysis/${analysis._id?.toString()}`)
+                      router.push(`/analysis/${analysis._id}`)
                     }}
+                    onDelete={handleDelete}
                   />
                 ))}
               </div>

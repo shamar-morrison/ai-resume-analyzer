@@ -92,15 +92,28 @@ export async function createAnalysis(params: CreateAnalysisParams): Promise<IAna
 }
 
 /**
- * Delete an analysis
+ * Delete an analysis (with ownership verification)
  */
-export async function deleteAnalysis(analysisId: string): Promise<boolean> {
+export async function deleteAnalysis(analysisId: string, userId: string): Promise<boolean> {
   try {
     const db = await getDatabase();
     const analysesCollection = db.collection<IAnalysis>(ANALYSES_COLLECTION);
 
+    // Verify the user owns this analysis before deleting
+    const analysis = await analysesCollection.findOne({
+      _id: new ObjectId(analysisId),
+      userId,
+    });
+
+    if (!analysis) {
+      console.error('Analysis not found or user does not own this analysis');
+      return false;
+    }
+
+    // Delete the analysis
     const result = await analysesCollection.deleteOne({
       _id: new ObjectId(analysisId),
+      userId,
     });
 
     return result.deletedCount > 0;
