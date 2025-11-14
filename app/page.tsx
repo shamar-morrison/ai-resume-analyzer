@@ -107,10 +107,10 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-16 md:py-24">
+      <main className="container mx-auto flex min-h-screen items-center justify-center px-4">
         <div className="mx-auto max-w-4xl text-center">
           {/* Hero Section */}
-          <h1 className="mb-4 text-4xl font-bold tracking-tight text-blue-600 md:text-5xl lg:text-6xl">
+          <h1 className="mb-4 bg-linear-to-r from-blue-400 via-blue-500 to-purple-500 bg-clip-text text-4xl font-bold tracking-tight text-transparent md:text-5xl lg:text-[65px]">
             Transform Your Resume with AI
           </h1>
           <p className="mb-12 text-lg text-gray-600 md:text-xl">
@@ -131,7 +131,7 @@ export default function Home() {
               ${isDragReject ? 'border-red-500 bg-red-50' : ''}
               ${
                 !isDragActive && !isDragReject
-                  ? 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50'
+                  ? 'border-gray-300 bg-transparent hover:border-gray-400 hover:bg-white/50'
                   : ''
               }
             `}
