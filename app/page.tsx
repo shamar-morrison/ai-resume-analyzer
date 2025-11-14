@@ -7,6 +7,7 @@ import { useDropzone } from 'react-dropzone'
 import { Upload, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AuthDialog } from '@/components/auth/auth-dialog'
+import { AnalysisProgress, AnalysisStep } from '@/components/analysis-progress'
 import Link from 'next/link'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
 import { WhatWeAnalyzeSection } from '@/components/landing/what-we-analyze-section'
@@ -20,6 +21,77 @@ export default function Home() {
     'login'
   )
   const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [currentStep, setCurrentStep] = useState<AnalysisStep>('uploading')
+  const [progress, setProgress] = useState(0)
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  // Handle file upload and analysis
+  const handleFileUpload = useCallback(async (file: File) => {
+    setIsAnalyzing(true)
+    setUploadingFile(file)
+    setError(null)
+
+    try {
+      // Step 1: Uploading (0-25%)
+      setCurrentStep('uploading')
+      setProgress(10)
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      setProgress(25)
+
+      // Step 2: Extracting text (25-50%)
+      setCurrentStep('extracting')
+      setProgress(35)
+
+      // Step 3: Analyzing (50-90%)
+      setCurrentStep('analyzing')
+      setProgress(50)
+
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        body: formData,
+      })
+
+      setProgress(85)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to analyze resume')
+      }
+
+      const data = await response.json()
+
+      // Step 4: Saving (90-100%)
+      setCurrentStep('saving')
+      setProgress(95)
+
+      await new Promise(resolve => setTimeout(resolve, 500)) // Brief pause for UX
+
+      setProgress(100)
+
+      // Redirect to analysis details page
+      if (data.analysisId) {
+        router.push(`/analysis/${data.analysisId}`)
+      } else {
+        throw new Error('No analysis ID returned')
+      }
+    } catch (err: any) {
+      console.error('Upload error:', err)
+      setError(err.message || 'Failed to analyze resume. Please try again.')
+      setIsAnalyzing(false)
+      setUploadingFile(null)
+      setProgress(0)
+
+      // Show error for 3 seconds then reset
+      setTimeout(() => {
+        setError(null)
+      }, 5000)
+    }
+  }, [router])
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -33,22 +105,22 @@ export default function Home() {
         setAuthDialogOpen(true)
         return
       }
-      // TODO: Handle file upload for authenticated users
-      console.log('Files dropped:', acceptedFiles)
-      router.push('/dashboard')
+
+      // Handle file upload for authenticated users
+      if (acceptedFiles.length > 0) {
+        handleFileUpload(acceptedFiles[0])
+      }
     },
-    [isSignedIn, router]
+    [isSignedIn, handleFileUpload]
   )
 
   // Auto-upload pending file after successful authentication
   useEffect(() => {
     if (isSignedIn && pendingFile) {
-      // TODO: Handle file upload for authenticated users
-      console.log('Auto-uploading pending file:', pendingFile)
+      handleFileUpload(pendingFile)
       setPendingFile(null)
-      router.push('/dashboard')
     }
-  }, [isSignedIn, pendingFile, router])
+  }, [isSignedIn, pendingFile, handleFileUpload])
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } =
     useDropzone({
@@ -64,6 +136,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+      {/* Analysis Progress Overlay */}
+      {isAnalyzing && uploadingFile && (
+        <AnalysisProgress
+          fileName={uploadingFile.name}
+          fileSize={uploadingFile.size}
+          currentStep={currentStep}
+          progress={progress}
+        />
+      )}
+
       {/* Auth Dialog */}
       <AuthDialog
         open={authDialogOpen}
@@ -178,6 +260,13 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-6 rounded-lg bg-red-50 border border-red-200 p-4 text-center">
+              <p className="text-sm font-medium text-red-800">{error}</p>
+            </div>
+          )}
         </div>
       </main>
 
