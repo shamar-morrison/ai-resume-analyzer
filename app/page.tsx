@@ -8,6 +8,9 @@ import { Upload, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AuthDialog } from '@/components/auth/auth-dialog'
 import Link from 'next/link'
+import { HowItWorksSection } from '@/components/landing/how-it-works-section'
+import { WhatWeAnalyzeSection } from '@/components/landing/what-we-analyze-section'
+import { CTASection } from '@/components/landing/cta-section'
 
 export default function Home() {
   const { isSignedIn } = useUser()
@@ -152,6 +155,11 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* Landing Page Sections */}
+      <HowItWorksSection />
+      <WhatWeAnalyzeSection />
+      <CTASection />
     </div>
   )
 }
