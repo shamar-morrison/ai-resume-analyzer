@@ -8,18 +8,103 @@ import Link from 'next/link'
 import { getAnalysisByUserId } from '@/lib/actions/analysis.actions'
 import { AnalysisCard } from '@/components/dashboard/analysis-card'
 import { EmptyState } from '@/components/dashboard/empty-state'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { SerializedAnalysis } from '@/lib/models/analysis.model'
+import { AnalysisProgress, AnalysisStep } from '@/components/analysis-progress'
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
   const [analyses, setAnalyses] = useState<SerializedAnalysis[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [currentStep, setCurrentStep] = useState<AnalysisStep>('uploading')
+  const [progress, setProgress] = useState(0)
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Handle delete analysis
   const handleDelete = (analysisId: string) => {
     setAnalyses((prev) => prev.filter((a) => a._id !== analysisId))
+  }
+
+  // Handle file upload and analysis
+  const handleFileUpload = useCallback(async (file: File) => {
+    setIsAnalyzing(true)
+    setUploadingFile(file)
+    setError(null)
+
+    try {
+      // Step 1: Uploading (0-25%)
+      setCurrentStep('uploading')
+      setProgress(10)
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      setProgress(25)
+
+      // Step 2: Extracting text (25-50%)
+      setCurrentStep('extracting')
+      setProgress(35)
+
+      // Step 3: Analyzing (50-90%)
+      setCurrentStep('analyzing')
+      setProgress(50)
+
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        body: formData,
+      })
+
+      setProgress(85)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to analyze resume')
+      }
+
+      const data = await response.json()
+
+      // Step 4: Saving (90-100%)
+      setCurrentStep('saving')
+      setProgress(95)
+
+      await new Promise(resolve => setTimeout(resolve, 500)) // Brief pause for UX
+
+      setProgress(100)
+
+      // Redirect to analysis details page
+      if (data.analysisId) {
+        router.push(`/analysis/${data.analysisId}`)
+      } else {
+        throw new Error('No analysis ID returned')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to analyze resume. Please try again.')
+      setIsAnalyzing(false)
+      setUploadingFile(null)
+      setProgress(0)
+
+      // Show error for 5 seconds then reset
+      setTimeout(() => {
+        setError(null)
+      }, 5000)
+    }
+  }, [router])
+
+  // Handle file selection from input
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handleFileUpload(file)
+    }
+  }
+
+  // Trigger file input click
+  const handleAnalyzeClick = () => {
+    fileInputRef.current?.click()
   }
 
   useEffect(() => {
@@ -50,6 +135,25 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+      {/* Analysis Progress Overlay */}
+      {isAnalyzing && uploadingFile && (
+        <AnalysisProgress
+          fileName={uploadingFile.name}
+          fileSize={uploadingFile.size}
+          currentStep={currentStep}
+          progress={progress}
+        />
+      )}
+
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.docx"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
@@ -87,13 +191,23 @@ export default function DashboardPage() {
 
           {/* Analyze New Resume Button */}
           <div className="mb-12">
-            <Link href="/">
-              <Button size="lg" className="gap-2">
-                <FileText className="h-5 w-5" />
-                Analyze New Resume
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              className="gap-2"
+              onClick={handleAnalyzeClick}
+              disabled={isAnalyzing}
+            >
+              <FileText className="h-5 w-5" />
+              {isAnalyzing ? 'Analyzing...' : 'Analyze New Resume'}
+            </Button>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-8 rounded-lg bg-red-50 border border-red-200 p-4">
+              <p className="text-sm font-medium text-red-800">{error}</p>
+            </div>
+          )}
 
           {/* Analysis History */}
           <div>
