@@ -1,11 +1,13 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-	experimental: {
-		serverActions: {
-			bodySizeLimit: '5mb',
-		},
-	},
-};
+  typedRoutes: true,
+  experimental: {
+    typedEnv: true,
+    serverActions: {
+      bodySizeLimit: '5mb',
+    },
+  },
+}
 
-export default nextConfig;
+export default nextConfig
