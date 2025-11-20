@@ -12,10 +12,11 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
  * Analyze resume text using Gemini Flash 2.x
  */
 export async function analyzeResume(
-  text: string
+  text: string,
+  jobDescription?: string
 ): Promise<GeminiAnalysisResponse> {
   try {
-    const prompt = `Analyze the following resume and provide a detailed evaluation with scores (1-10) for each category:
+    let prompt = `Analyze the following resume and provide a detailed evaluation with scores (1-10) for each category:
 
 1. Organization & Structure
 2. Content Quality
@@ -31,7 +32,45 @@ For each category, provide:
 Also provide:
 - An overall score (average of all categories)
 - 3-5 key strengths
-- 3-5 priority improvements
+- 3-5 priority improvements`
+
+    if (jobDescription) {
+      prompt += `
+
+Also compare the resume against the following Job Description and provide a compatibility analysis:
+- A compatibility score (1-10)
+- Matching keywords found in both
+- Missing keywords important for the job
+- Specific tips to improve compatibility
+
+Format your response as JSON with this exact structure:
+{
+  "categoryScores": {
+    "organization": { "score": number, "tips": ["tip1", "tip2", "tip3"] },
+    "content": { "score": number, "tips": ["tip1", "tip2", "tip3"] },
+    "formatting": { "score": number, "tips": ["tip1", "tip2", "tip3"] },
+    "keywords": { "score": number, "tips": ["tip1", "tip2", "tip3"] },
+    "achievements": { "score": number, "tips": ["tip1", "tip2", "tip3"] },
+    "grammar": { "score": number, "tips": ["tip1", "tip2", "tip3"] }
+  },
+  "overallScore": number,
+  "strengths": ["strength1", "strength2", "strength3", "strength4", "strength5"],
+  "improvements": ["improvement1", "improvement2", "improvement3", "improvement4", "improvement5"],
+  "compatibility": {
+    "score": number,
+    "matchingKeywords": ["keyword1", "keyword2"],
+    "missingKeywords": ["keyword1", "keyword2"],
+    "tips": ["tip1", "tip2", "tip3"]
+  }
+}
+
+Resume text:
+${text}
+
+Job Description:
+${jobDescription}`
+    } else {
+      prompt += `
 
 Format your response as JSON with this exact structure:
 {
@@ -50,6 +89,7 @@ Format your response as JSON with this exact structure:
 
 Resume text:
 ${text}`
+    }
 
     // Generate content with retry logic
     const result = await generateWithRetry(prompt)
@@ -213,6 +253,30 @@ function validateGeminiResponse(data: any): void {
 
   if (!Array.isArray(data.improvements) || data.improvements.length === 0) {
     throw new Error('Invalid improvements: must be a non-empty array')
+  }
+
+  if (data.compatibility) {
+    if (typeof data.compatibility !== 'object') {
+      throw new Error('Invalid compatibility: must be an object')
+    }
+    if (
+      typeof data.compatibility.score !== 'number' ||
+      data.compatibility.score < 1 ||
+      data.compatibility.score > 10
+    ) {
+      throw new Error(
+        'Invalid compatibility score: must be between 1 and 10'
+      )
+    }
+    if (!Array.isArray(data.compatibility.matchingKeywords)) {
+      throw new Error('Invalid matchingKeywords: must be an array')
+    }
+    if (!Array.isArray(data.compatibility.missingKeywords)) {
+      throw new Error('Invalid missingKeywords: must be an array')
+    }
+    if (!Array.isArray(data.compatibility.tips)) {
+      throw new Error('Invalid compatibility tips: must be an array')
+    }
   }
 }
 

@@ -24,6 +24,8 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [jobDescription, setJobDescription] = useState('')
+
   // Handle delete analysis
   const handleDelete = (analysisId: string) => {
     setAnalyses((prev) => prev.filter((a) => a._id !== analysisId))
@@ -42,6 +44,9 @@ export default function DashboardPage() {
 
       const formData = new FormData()
       formData.append('file', file)
+      if (jobDescription.trim()) {
+        formData.append('jobDescription', jobDescription.trim())
+      }
 
       setProgress(25)
 
@@ -92,7 +97,7 @@ export default function DashboardPage() {
         setError(null)
       }, 5000)
     }
-  }, [router])
+  }, [router, jobDescription])
 
   // Handle file selection from input
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,7 +195,24 @@ export default function DashboardPage() {
           </div>
 
           {/* Analyze New Resume Button */}
-          <div className="mb-12">
+          <div className="mb-12 bg-white p-6 rounded-xl shadow-sm border">
+            <h2 className="text-xl font-semibold mb-4">Analyze New Resume</h2>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Job Description (Optional)
+              </label>
+              <textarea
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
+                placeholder="Paste the job description here to check compatibility..."
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Add a job description to get a compatibility score and tailored advice.
+              </p>
+            </div>
+
             <Button
               size="lg"
               className="gap-2"
@@ -198,7 +220,7 @@ export default function DashboardPage() {
               disabled={isAnalyzing}
             >
               <FileText className="h-5 w-5" />
-              {isAnalyzing ? 'Analyzing...' : 'Analyze New Resume'}
+              {isAnalyzing ? 'Analyzing...' : 'Upload Resume & Analyze'}
             </Button>
           </div>
 

@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Parse form data
     const formData = await request.formData();
+    const jobDescription = formData.get('jobDescription') as string | null;
     const file = formData.get('file') as File | null;
 
     if (!file) {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Analyze resume with Gemini
     let analysisResult;
     try {
-      analysisResult = await analyzeResume(extractedText);
+      analysisResult = await analyzeResume(extractedText, jobDescription || undefined);
     } catch (error: any) {
       return NextResponse.json(
         { error: error.message || 'Failed to analyze resume. Please try again.' },
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
       categoryScores: analysisResult.categoryScores,
       strengths: analysisResult.strengths,
       improvements: analysisResult.improvements,
+      compatibility: analysisResult.compatibility,
       fileSize: file.size,
       processingTime,
     });
@@ -103,6 +105,7 @@ export async function POST(request: NextRequest) {
       analysisId: analysis._id?.toString(),
       score,
       overallScore: analysisResult.overallScore,
+      compatibility: analysisResult.compatibility,
     });
   } catch (error: any) {
     return NextResponse.json(

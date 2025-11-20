@@ -10,11 +10,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowLeft,
-  Calendar,
   Clock,
   TrendingUp,
-  FileIcon,
-  SignalZero,
   FilePlus2Icon,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -334,6 +331,96 @@ export function AnalysisDetails({ analysis }: AnalysisDetailsProps) {
             </div>
           </Card>
         </div>
+
+        {/* Job Compatibility Analysis */}
+        {analysis.compatibility && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Job Compatibility Analysis
+            </h2>
+            <Card className="p-6 border-blue-200 bg-blue-50">
+              <div className="space-y-6">
+                {/* Score */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Compatibility Score
+                  </h3>
+                  <span
+                    className={`text-3xl font-bold ${getScoreColor(
+                      analysis.compatibility.score
+                    )}`}
+                  >
+                    {analysis.compatibility.score}/10
+                  </span>
+                </div>
+                <Progress
+                  value={analysis.compatibility.score * 10}
+                  className="h-3"
+                />
+
+                {/* Keywords */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      Matching Keywords
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {analysis.compatibility.matchingKeywords.map(
+                        (keyword, i) => (
+                          <Badge
+                            key={i}
+                            variant="secondary"
+                            className="bg-green-100 text-green-800 hover:bg-green-200"
+                          >
+                            {keyword}
+                          </Badge>
+                        )
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-red-600" />
+                      Missing Keywords
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {analysis.compatibility.missingKeywords.map(
+                        (keyword, i) => (
+                          <Badge
+                            key={i}
+                            variant="secondary"
+                            className="bg-red-100 text-red-800 hover:bg-red-200"
+                          >
+                            {keyword}
+                          </Badge>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tips */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Compatibility Tips
+                  </h4>
+                  <ul className="space-y-2">
+                    {analysis.compatibility.tips.map((tip, index) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-gray-700"
+                      >
+                        <TrendingUp className="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" />
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Category Scores */}
         <div className="mb-8">

@@ -45,6 +45,7 @@ export interface IAnalysis {
     suggestions?: string[];
     detailedFeedback?: string;
   };
+  compatibility?: CompatibilityScore;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -80,6 +81,7 @@ export interface CreateAnalysisParams {
     suggestions?: string[];
     detailedFeedback?: string;
   };
+  compatibility?: CompatibilityScore;
 }
 
 /**
@@ -107,6 +109,17 @@ export interface GeminiAnalysisResponse {
   overallScore: number;
   strengths: string[];
   improvements: string[];
+  compatibility?: CompatibilityScore;
+}
+
+/**
+ * Compatibility score with job description
+ */
+export interface CompatibilityScore {
+  score: number; // 1-10 scale
+  matchingKeywords: string[];
+  missingKeywords: string[];
+  tips: string[];
 }
 
 /**

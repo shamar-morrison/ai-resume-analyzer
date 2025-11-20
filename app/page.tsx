@@ -27,6 +27,7 @@ export default function Home() {
   const [progress, setProgress] = useState(0)
   const [uploadingFile, setUploadingFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [jobDescription, setJobDescription] = useState('')
 
   // Handle file upload and analysis
   const handleFileUpload = useCallback(
@@ -42,6 +43,9 @@ export default function Home() {
 
         const formData = new FormData()
         formData.append('file', file)
+        if (jobDescription.trim()) {
+          formData.append('jobDescription', jobDescription.trim())
+        }
 
         setProgress(25)
 
@@ -93,7 +97,7 @@ export default function Home() {
         }, 5000)
       }
     },
-    [router]
+    [router, jobDescription]
   )
 
   const onDrop = useCallback(
@@ -241,6 +245,27 @@ export default function Home() {
             Get instant, actionable feedback powered by AI to land your dream
             job
           </motion.p>
+
+          {/* Job Description Input */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+            className="mb-8 text-left max-w-2xl mx-auto"
+          >
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Job Description (Optional)
+            </label>
+            <textarea
+              className="w-full p-4 border rounded-xl bg-white/50 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px] shadow-sm transition-all"
+              placeholder="Paste the job description here to check compatibility..."
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+            />
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Add a job description to get a compatibility score and tailored advice.
+            </p>
+          </motion.div>
 
           {/* File Upload Zone */}
           <motion.div
