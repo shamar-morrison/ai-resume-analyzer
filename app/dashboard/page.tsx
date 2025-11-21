@@ -169,7 +169,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
+            <span className="hidden md:inline text-sm text-gray-600">
               {user.emailAddresses[0]?.emailAddress}
             </span>
             <UserButton
