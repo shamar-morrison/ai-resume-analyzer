@@ -264,9 +264,7 @@ function validateGeminiResponse(data: any): void {
       data.compatibility.score < 1 ||
       data.compatibility.score > 10
     ) {
-      throw new Error(
-        'Invalid compatibility score: must be between 1 and 10'
-      )
+      throw new Error('Invalid compatibility score: must be between 1 and 10')
     }
     if (!Array.isArray(data.compatibility.matchingKeywords)) {
       throw new Error('Invalid matchingKeywords: must be an array')
