@@ -141,6 +141,14 @@ async function generateWithRetry(
 
       // Check if it's a rate limit error
       if (error?.status === 429 || error?.message?.includes('rate limit')) {
+        // If we've exhausted retries or if it's a hard quota limit (checks for "quota" in message), throw specific error
+        if (
+          attempt === maxRetries - 1 ||
+          error?.message?.toLowerCase().includes('quota')
+        ) {
+          throw new Error('API Quota Exceeded. Please try again later.')
+        }
+
         const delay = initialDelay * Math.pow(2, attempt)
         await new Promise((resolve) => setTimeout(resolve, delay))
         continue
